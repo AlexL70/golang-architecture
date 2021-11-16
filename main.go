@@ -23,6 +23,10 @@ type human interface {
 	speak()
 }
 
+func foo(h human) {
+	h.speak()
+}
+
 func main() {
 	p1 := person{
 		first: "Miss Moneypenny",
@@ -33,15 +37,18 @@ func main() {
 		ltk:    true,
 	}
 
-	fmt.Printf("%T\n", p1)
-
 	//	p1 is of type "person", but it is also of type "human" (concrete)
 	//	because whatever has "speak()" method is of type "human" (abstract)
-	var x human = p1
+	var x, y human
+	x = p1
+	y = sa1
 	x.speak()
 	fmt.Printf("%T\n", x)
-	x = sa1
-	x.speak()
-	fmt.Printf("%T\n", x)
-
+	y.speak()
+	fmt.Printf("%T\n", y)
+	fmt.Println("----------")
+	foo(x)
+	foo(y)
+	foo(p1)
+	foo(sa1)
 }
