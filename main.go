@@ -31,18 +31,23 @@ type accessor interface {
 	retrieve(int) person
 }
 
-func put(a accessor, key int, p person) {
-	a.save(key, p)
+type personService struct {
+	a accessor
 }
 
-func get(a accessor, key int) person {
-	return a.retrieve(key)
+func (ps personService) get(key int) (person, error) {
+	p := ps.a.retrieve(key)
+	if p.first == "" {
+		return person{}, fmt.Errorf("Person with ID %d not found", key)
+	}
+	return p, nil
+}
+
+func (ps personService) put(key int, p person) {
+	ps.a.save(key, p)
 }
 
 func main() {
-	dbm := mongo{}
-	dbp := postg{}
-
 	p1 := person{
 		first: "Jenny",
 	}
@@ -52,13 +57,21 @@ func main() {
 	}
 
 	//	store to mongo
-	put(dbm, 1, p1)
-	put(dbm, 2, p2)
+	srvM := personService{a: mongo{}}
+	srvM.put(1, p1)
+	srvM.put(2, p2)
 	//	store to postgress
-	put(dbp, 1, p1)
-	put(dbp, 2, p2)
+	srvP := personService{a: postg{}}
+	srvP.put(1, p1)
+	srvP.put(2, p2)
 	//	retrieve from mongo
-	fmt.Println("mongo", get(dbm, 1), get(dbm, 2))
+	fmt.Println("mongo")
+	fmt.Println(srvM.get(1))
+	fmt.Println(srvM.get(2))
+	fmt.Println(srvM.get(3))
 	//	retrieve from postgress
-	fmt.Println("postgress", get(dbp, 1), get(dbp, 2))
+	fmt.Println("postgress")
+	fmt.Println(srvP.get(1))
+	fmt.Println(srvP.get(2))
+	fmt.Println(srvP.get(3))
 }
