@@ -6,49 +6,59 @@ type person struct {
 	first string
 }
 
-func (p person) speak() {
-	fmt.Println("Hello,", p.first)
+type mongo map[int]person
+
+func (m mongo) save(key int, p person) {
+	m[key] = p
 }
 
-type secretAgent struct {
-	person
-	ltk bool
+func (m mongo) retrieve(key int) person {
+	return m[key]
 }
 
-func (sa secretAgent) speak() {
-	fmt.Println("I am a secret agent. My name is", sa.first)
+type postg map[int]person
+
+func (pg postg) save(key int, p person) {
+	pg[key] = p
 }
 
-type human interface {
-	speak()
+func (pg postg) retrieve(key int) person {
+	return pg[key]
 }
 
-func foo(h human) {
-	h.speak()
+type accessor interface {
+	save(int, person)
+	retrieve(int) person
+}
+
+func put(a accessor, key int, p person) {
+	a.save(key, p)
+}
+
+func get(a accessor, key int) person {
+	return a.retrieve(key)
 }
 
 func main() {
+	dbm := mongo{}
+	dbp := postg{}
+
 	p1 := person{
-		first: "Miss Moneypenny",
+		first: "Jenny",
 	}
 
-	sa1 := secretAgent{
-		person: person{first: "James"},
-		ltk:    true,
+	p2 := person{
+		first: "James",
 	}
 
-	//	p1 is of type "person", but it is also of type "human" (concrete)
-	//	because whatever has "speak()" method is of type "human" (abstract)
-	var x, y human
-	x = p1
-	y = sa1
-	x.speak()
-	fmt.Printf("%T\n", x)
-	y.speak()
-	fmt.Printf("%T\n", y)
-	fmt.Println("----------")
-	foo(x)
-	foo(y)
-	foo(p1)
-	foo(sa1)
+	//	store to mongo
+	put(dbm, 1, p1)
+	put(dbm, 2, p2)
+	//	store to postgress
+	put(dbp, 1, p1)
+	put(dbp, 2, p2)
+	//	retrieve from mongo
+	fmt.Println("mongo", get(dbm, 1), get(dbm, 2))
+	//	retrieve from postgress
+	fmt.Println("postgress", get(dbp, 1), get(dbp, 2))
 }
