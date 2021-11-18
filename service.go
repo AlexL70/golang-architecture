@@ -2,12 +2,15 @@ package architecture
 
 import "fmt"
 
+//	Person is how architecture package stores a person
 type Person struct {
 	First string
 }
 
+//	Accessor is an interface to store/retrieve Person (in database)
 type Accessor interface {
 	Save(int, Person)
+	//	If person not found by key, Retrieve returns the zero value
 	Retrieve(int) Person
 }
 
