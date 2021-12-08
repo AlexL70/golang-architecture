@@ -1,49 +1,45 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
 )
 
-type person struct {
-	first string
-}
+func makeRequest(ctx context.Context, route string) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, route, nil)
+	if err != nil {
+		return "", err
+	}
 
-type secretAgent struct {
-	person
-	ltk bool
-}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
 
-func (p person) speak() {
-	fmt.Println("From a person:", p.first)
-}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("Bad status code %d", resp.StatusCode)
+	}
 
-func (sa secretAgent) speak() {
-	fmt.Println("This is not my real name:", sa.first)
-}
+	bs, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", nil
+	}
 
-type human interface {
-	speak()
-}
-
-func saySomething(h human) {
-	h.speak()
+	return string(bs), nil
 }
 
 func main() {
-	pp1 := &person{
-		first: "Jenny",
-	}
-	sa1 := secretAgent{
-		person: person{
-			first: "James",
-		},
-		ltk: true,
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*350)
+	defer cancel()
+
+	resp, err := makeRequest(ctx, "https://www.google.com")
+	if err != nil {
+		panic(err)
 	}
 
-	//	here we pass pointer to person
-	saySomething(pp1)
-	//	here we pass just secretAgend (value)
-	saySomething(sa1)
-	//	Both work the same way regardless of the fact that receivers are
-	//	identical up to type
+	fmt.Println(resp)
 }
