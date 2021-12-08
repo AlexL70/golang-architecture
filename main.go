@@ -3,43 +3,20 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"time"
 )
 
-func makeRequest(ctx context.Context, route string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, route, nil)
-	if err != nil {
-		return "", err
-	}
+type key string
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Bad status code %d", resp.StatusCode)
-	}
-
-	bs, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", nil
-	}
-
-	return string(bs), nil
-}
+var userKey key = "userKey"
 
 func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*350)
-	defer cancel()
+	ctx := context.WithValue(context.Background(), userKey, 1)
+	//ctx := context.Background()
 
-	resp, err := makeRequest(ctx, "https://www.google.com")
-	if err != nil {
-		panic(err)
+	userId, ok := ctx.Value(userKey).(int)
+	if !ok {
+		fmt.Print("Not logged in")
+		return
 	}
-
-	fmt.Println(resp)
+	fmt.Print("UserId = ", userId)
 }
