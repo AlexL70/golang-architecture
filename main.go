@@ -3,20 +3,18 @@ package main
 import (
 	"context"
 	"fmt"
+
+	"github.com/AlexL70/golang-architecture/session"
 )
 
-type key string
-
-var userKey key = "userKey"
-
 func main() {
-	ctx := context.WithValue(context.Background(), userKey, 1)
-	//ctx := context.Background()
+	ctx := context.Background()
+	ctx = session.WithUserID(ctx, 1)
 
-	userId, ok := ctx.Value(userKey).(int)
-	if !ok {
+	userId := session.GetUserId(ctx)
+	if userId == nil {
 		fmt.Print("Not logged in")
 		return
 	}
-	fmt.Print("UserId = ", userId)
+	fmt.Print("UserId = ", *userId)
 }
