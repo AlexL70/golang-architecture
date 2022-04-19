@@ -18,7 +18,7 @@ func main() {
 			fmt.Printf("Wrong timeout value passes: %s. Setting to %d\n", os.Args[1], timeout)
 		}
 	}
-	fmt.Printf("Timeout = %d\n", timeout)
+	fmt.Printf("Timeout = %dms\n", timeout)
 	ctx := context.Background()
 	ctx, cancelF := context.WithTimeout(ctx, time.Duration(timeout)*time.Millisecond)
 	defer cancelF()
