@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"net"
 )
 
 type ErrFile struct {
@@ -20,36 +21,35 @@ func (e ErrFile) Unwrap() error {
 
 var ErrNotExist = errors.New("File does not exist")
 
-func OpenFile(fileName string) (string, error) {
-	return "", ErrNotExist
-}
-
-func OpenFile2(fileName string) (string, error) {
+func openFile(fileName string) (string, error) {
 	return "", ErrFile{
 		FileName: fileName,
 		Base:     ErrNotExist,
 	}
 }
 
-func main() {
-	//	Easy way. Wrapping error using Errorf function with %w format option
-	_, err := OpenFile("mytextfile.txt")
+func processFile(fileName string) error {
+	_, err := openFile(fileName)
 	if err != nil {
-		wrappedError := fmt.Errorf("Unable to open %v: %w", "mytextfile.txt", err)
-		//	fmt.Errors keeps old error so comparison shows it is the same error as it was before wrapping
-		if errors.Is(wrappedError, ErrNotExist) {
-			fmt.Printf("This is still \"%e\" after wrapping.\n", ErrNotExist)
-		}
-		fmt.Println(wrappedError)
+		return fmt.Errorf("Error while opening file: %w", err)
 	}
+	//  Do work on stuff
+	return nil
+}
 
-	//	More complicated way. Wrapping error into custom error type that implements Unwrap function
-	//	so that Is function could still compare with original error
-	_, err = OpenFile2("MySecondTextFile.txt")
+func main() {
+	err := processFile("MySecondTextFile.txt")
 	if err != nil {
-		if errors.Is(err, ErrNotExist) {
-			fmt.Printf("This is still \"%e\" after wrapping.\n", ErrNotExist)
+		var fErr ErrFile
+		if errors.As(err, &fErr) {
+			fmt.Printf("Was unable to do something with file \"%s\"\n", fErr.FileName)
 		}
 		fmt.Println(err)
+		var netErr net.Error
+		if errors.As(err, &netErr) {
+			if netErr.Temporary() {
+				//  Retry
+			}
+		}
 	}
 }
