@@ -1,37 +1,57 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"io"
+	"log"
+	"os"
 )
 
-func cat() error {
-	return errors.New("Cat is an error!")
+type writeFile struct {
+	f   *os.File
+	err error
 }
 
-func moo() error {
-	return fmt.Errorf("Moo is an error: %w", cat())
+func newWriteFile(fileName string) *writeFile {
+	f, err := os.Create(fileName)
+	return &writeFile{
+		f:   f,
+		err: err,
+	}
 }
 
-func bar() error {
-	return fmt.Errorf("Bar is n error: %w", moo())
+func (wf *writeFile) WriteString(s string) {
+	if wf.err != nil {
+		return
+	}
+	_, err := io.WriteString(wf.f, s)
+	if err != nil {
+		wf.err = err
+	}
 }
 
-func foo() error {
-	return fmt.Errorf("Foo is an eror: %w", bar())
+func (wf *writeFile) Close() {
+	if wf.err != nil {
+		return
+	}
+	err := wf.f.Close()
+	if err != nil {
+		wf.err = err
+	}
+}
+
+func (wf *writeFile) Err() error {
+	return wf.err
 }
 
 func main() {
-	err := foo()
-	fmt.Println(err)
-	err = errors.Unwrap(err)
-	fmt.Println(err)
-	err = errors.Unwrap(err)
-	fmt.Println(err)
-	err = errors.Unwrap(err)
-	fmt.Println(err)
-	err = errors.Unwrap(err)
-	fmt.Println(err)
-	err = errors.Unwrap(err)
-	fmt.Println(err)
+	wf := newWriteFile("File.txt")
+	wf.WriteString("Hello World!\n")
+	wf.WriteString("Second line.\n")
+	wf.WriteString("Third line.\n")
+	wf.Close()
+	if wf.Err() != nil {
+		log.Println(fmt.Errorf("Error: %w\n", wf.Err()))
+	}
+
 }
