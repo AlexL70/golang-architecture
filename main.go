@@ -3,53 +3,30 @@ package main
 import (
 	"errors"
 	"fmt"
-	"net"
+	"log"
+	"os"
 )
 
-type ErrFile struct {
-	FileName string
-	Base     error
-}
-
-func (e ErrFile) Error() string {
-	return fmt.Sprintf("File %s: %v.", e.FileName, e.Base)
-}
-
-func (e ErrFile) Unwrap() error {
-	return e.Base
-}
-
-var ErrNotExist = errors.New("File does not exist")
-
-func openFile(fileName string) (string, error) {
-	return "", ErrFile{
-		FileName: fileName,
-		Base:     ErrNotExist,
-	}
-}
-
-func processFile(fileName string) error {
-	_, err := openFile(fileName)
-	if err != nil {
-		return fmt.Errorf("Error while opening file: %w", err)
-	}
-	//  Do work on stuff
-	return nil
-}
-
 func main() {
-	err := processFile("MySecondTextFile.txt")
+	const fName = "rumi.txt"
+	f, err := os.Open(fName)
 	if err != nil {
-		var fErr ErrFile
-		if errors.As(err, &fErr) {
-			fmt.Printf("Was unable to do something with file \"%s\"\n", fErr.FileName)
+		switch {
+		case errors.Is(err, os.ErrNotExist):
+			err = fmt.Errorf("File \"%s\" does not exists: %w", fName, err)
+		case errors.Is(err, os.ErrPermission):
+			err = fmt.Errorf("You do not have a permission to open \"%s\" file: %w", fName, err)
+		default:
+			err = fmt.Errorf("File \"%s\" cannot be opened: %w", fName, err)
 		}
-		fmt.Println(err)
-		var netErr net.Error
-		if errors.As(err, &netErr) {
-			if netErr.Temporary() {
-				//  Retry
-			}
-		}
+		log.Println(err)
+		return
 	}
+	defer f.Close()
+	data := make([]byte, 1000)
+	count, err := f.Read(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("read %d bytes: %q\n", count, data[:count])
 }
