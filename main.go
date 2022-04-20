@@ -3,31 +3,35 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
-	"os"
 )
 
+func cat() error {
+	return errors.New("Cat is an error!")
+}
+
+func moo() error {
+	return fmt.Errorf("Moo is an error: %w", cat())
+}
+
+func bar() error {
+	return fmt.Errorf("Bar is n error: %w", moo())
+}
+
+func foo() error {
+	return fmt.Errorf("Foo is an eror: %w", bar())
+}
+
 func main() {
-	const fName = "rumi.txt"
-	f, err := os.Open(fName)
-	var perr *os.PathError
-	if errors.As(err, &perr) {
-		switch {
-		case errors.Is(perr, os.ErrNotExist):
-			err = fmt.Errorf("File \"%s\" does not exists: %w", fName, err)
-		case errors.Is(perr, os.ErrPermission):
-			err = fmt.Errorf("You do not have a permission to open \"%s\" file: %w", fName, err)
-		default:
-			err = fmt.Errorf("File \"%s\" cannot be opened: %w", fName, err)
-		}
-		log.Printf("%s\nOperation: %s\nPath: %s\nIs a timeout: %t\n", err, perr.Op, perr.Path, perr.Timeout())
-		return
-	}
-	defer f.Close()
-	data := make([]byte, 1000)
-	count, err := f.Read(data)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("read %d bytes: %q\n", count, data[:count])
+	err := foo()
+	fmt.Println(err)
+	err = errors.Unwrap(err)
+	fmt.Println(err)
+	err = errors.Unwrap(err)
+	fmt.Println(err)
+	err = errors.Unwrap(err)
+	fmt.Println(err)
+	err = errors.Unwrap(err)
+	fmt.Println(err)
+	err = errors.Unwrap(err)
+	fmt.Println(err)
 }
