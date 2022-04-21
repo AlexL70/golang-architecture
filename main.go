@@ -31,11 +31,9 @@ func newWriteFile(fileName string) *writeFile {
 	var wrapped *writeFileError = nil
 	if err != nil {
 		wrapped = &(writeFileError{Op: "newWriteFile", FileName: fileName, Err: err})
+		return &writeFile{f: nil, err: wrapped}
 	}
-	return &writeFile{
-		f:   f,
-		err: wrapped,
-	}
+	return &writeFile{f: f, err: nil}
 }
 
 func (wf *writeFile) WriteString(s string) {
@@ -49,7 +47,7 @@ func (wf *writeFile) WriteString(s string) {
 }
 
 func (wf *writeFile) Close() {
-	if wf.err != nil {
+	if wf.f == nil {
 		return
 	}
 	err := wf.f.Close()
