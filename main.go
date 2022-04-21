@@ -7,16 +7,34 @@ import (
 	"os"
 )
 
+type writeFileError struct {
+	Op       string
+	FileName string
+	Err      error
+}
+
+func (e writeFileError) Error() string {
+	return fmt.Sprintf("Error in %s method working with file \"%s\": %v", e.Op, e.FileName, e.Err)
+}
+
+func (e writeFileError) Unwrap() error {
+	return e.Err
+}
+
 type writeFile struct {
 	f   *os.File
-	err error
+	err *writeFileError
 }
 
 func newWriteFile(fileName string) *writeFile {
 	f, err := os.Create(fileName)
+	var wrapped *writeFileError = nil
+	if err != nil {
+		wrapped = &(writeFileError{Op: "newWriteFile", FileName: fileName, Err: err})
+	}
 	return &writeFile{
 		f:   f,
-		err: err,
+		err: wrapped,
 	}
 }
 
@@ -26,7 +44,7 @@ func (wf *writeFile) WriteString(s string) {
 	}
 	_, err := io.WriteString(wf.f, s)
 	if err != nil {
-		wf.err = err
+		wf.err = &(writeFileError{Op: "WriteString", FileName: wf.f.Name(), Err: err})
 	}
 }
 
@@ -36,12 +54,15 @@ func (wf *writeFile) Close() {
 	}
 	err := wf.f.Close()
 	if err != nil {
-		wf.err = err
+		wf.err = &(writeFileError{Op: "Close", FileName: wf.f.Name(), Err: err})
 	}
 }
 
 func (wf *writeFile) Err() error {
-	return wf.err
+	if wf.err != nil {
+		return *wf.err
+	}
+	return nil
 }
 
 func main() {
