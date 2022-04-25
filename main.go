@@ -1,20 +1,16 @@
 package main
 
-import (
-	"fmt"
-	"log"
+import "fmt"
 
-	"github.com/AlexL70/golang-architecture/fileWriter"
-)
+type Person struct {
+	FirstName string
+	LastName  string
+}
+
+func (p Person) String() string {
+	return fmt.Sprintf("%s %s", p.FirstName, p.LastName)
+}
 
 func main() {
-	wf := fileWriter.NewWriteFile("File.txt")
-	wf.WriteString("Hello World!\n")
-	wf.WriteString("Second line.\n")
-	wf.WriteString("Third line.\n")
-	wf.Close()
-	if wf.Err() != nil {
-		log.Println(fmt.Errorf("Error: %w\n", wf.Err()))
-	}
-
+	fmt.Println(Person{FirstName: "Alex", LastName: "Levinson"})
 }
