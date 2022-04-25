@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -8,7 +9,11 @@ import (
 
 func main() {
 	err := copyFile("kabirCopy.txt", "kabir.txt")
-	if err != nil {
+	var pe *os.PathError
+	if errors.Is(err, os.ErrNotExist) && errors.As(err, &pe) {
+		fmt.Printf("Error occured: %v\nOperation: %s\nPath: %s\n", err, pe.Op, pe.Path)
+		return
+	} else if err != nil {
 		fmt.Println(err)
 		return
 	}
