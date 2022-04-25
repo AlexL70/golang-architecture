@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +19,10 @@ func (cf *CopyFile) OpenSource(src string) {
 	}
 	srcF, err := os.Open(src)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			cf.err = fmt.Errorf("Source file \"%s\" does not exist! Error: %w", src, err)
+			return
+		}
 		cf.err = fmt.Errorf("Error opening source file \"%s\": %w", src, err)
 		return
 	}
